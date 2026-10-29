@@ -24,7 +24,7 @@ template<class X, class Y> bool mini(X &x, const Y &y){ return x > y ? x = y, 1 
 
 const int mod = 998244353;
 
-int n, q, sum[mxn], pre[mxn], dp[mxn];
+int n, q, sum[mxn], dp[mxn];
 string s;
 int f[mxn], ivf[mxn];
 
@@ -53,16 +53,13 @@ void solve(){
 	prepare();
 	cin >> n >> q >> s; s = " " + s;
 	vector<int> pos;
-	int o1 = 0, o2 = 0;
 	fo(i, 1, n){
 		sum[i] = sum[i - 1];
 		dp[i] = dp[i - 1];
 		if(s[i] == '1'){
+			++sum[i];
 			if(len(pos) and (i & 1) != (pos.back() & 1)) ++dp[i];
 			pos.pub(i);
-			++sum[i];
-			if(i & 1) pre[i] = o2, o1 = i;
-			else pre[i] = o1, o2 = i;
 		}
 	}
 	while(q--){

@@ -1,4 +1,3 @@
-// 9/10 (TLE)
 #include <bits/stdc++.h>
 using namespace std;
 
@@ -14,12 +13,14 @@ template<class X, class Y> bool mini(X &x, const Y &y){ return x > y ? x = y, 1 
 #define ret(x) return void(cout << (x) << '\n')
 #define all(x) begin(x),end(x)
 #define len(x) (int)(x).size()
-#define int long long
+// #define int long long -> TLE (9/10)
 #define mxn 1'000'007
+#define ll long long
 
 struct node{
-	int min, sum, lazy;
-	node(int m = 1e18, int s = 0, int l = 0){
+	int min, lazy;
+	ll sum;
+	node(int m = 1e9, ll s = 0, int l = 0){
 		min = m; sum = s; lazy = l;
 	}
 };
@@ -28,11 +29,21 @@ int n, m, q, red, a[1005][1005];
 node seg[1005][1005 * 4];
 
 node merge(const node &l, const node &r){
-	return node(min(l.min, r.min), l.sum + r.sum, 0);
+	return node(min<ll>(l.min, r.min), l.sum + r.sum, 0);
+}
+
+void build(int id, int l, int r, int o){
+	if(l == r){
+		seg[o][id] = node(a[o][l], a[o][l], 0); return;
+	}
+	int mid = l + r >> 1;
+	build(id * 2, l, mid, o);
+	build(id * 2 + 1, mid + 1, r, o);
+	seg[o][id] = merge(seg[o][id * 2], seg[o][id * 2 + 1]);
 }
 
 inline void apply(int id, int l, int r, int x, int o){
-	seg[o][id] = node(x, x * (r - l + 1), x);
+	seg[o][id] = node(x, 1ll * x * (r - l + 1), x);
 }
 
 inline void push(int id, int l, int mid, int r, int o){
@@ -54,7 +65,7 @@ inline void upd(int id, int l, int r, int u, int v, int x, int o){
 }
 
 inline node get(int id, int l, int r, int u, int v, int o){
-	if(r < u or v < l or u > v) return node(1e18, 0, 0);
+	if(r < u or v < l or u > v) return node(1e9, 0, 0);
 	if(u <= l and r <= v) return seg[o][id];
 	int mid = l + r >> 1;
 	if(seg[o][id].lazy) push(id, l, mid, r, o);
@@ -69,7 +80,8 @@ namespace sub1{
 		while(q--){
 			int t; cin >> t;
 			if(t == 1){
-				int s, c1, r1, c2, r2; cin >> s >> c1 >> r1 >> c2 >> r2;
+				ll s;
+				int c1, r1, c2, r2; cin >> s >> c1 >> r1 >> c2 >> r2;
 				bool ok = 1;
 				fo(i, r1, r2){
 					fo(j, c1, c2) if(a[i][j] < red){
@@ -78,17 +90,17 @@ namespace sub1{
 					if(ok == 0) break;
 				}
 				if(ok){
-					int res = 0;
+					ll res = 0;
 					fo(i, r1, r2){
 						if((i - r1 + 1) & 1){
 							fo(j, c1, c2){
-								int add = min(a[i][j] - red, s - res);
+								int add = min<ll>(a[i][j] - red, s - res);
 								res += add;
 								a[i][j] -= add;
 							}
 						}else{
 							fd(j, c2, c1){
-								int add = min(a[i][j] - red, s - res);
+								int add = min<ll>(a[i][j] - red, s - res);
 								res += add;
 								a[i][j] -= add;
 							}
@@ -107,16 +119,14 @@ namespace sub2{
 	bool check(){
 		return 1;
 	}
-	int pre[1005];
+	ll pre[1005];
 	void solve(){
-		fo(i, 1, n) fo(j, 1, m){
-			upd(1, 1, m, j, j, a[i][j], i);
-		}
+		fo(i, 1, n) build(1, 1, m, i);
 		while(q--){
 			int t; cin >> t;
 			if(t == 1){
 				int s, c1, r1, c2, r2; cin >> s >> c1 >> r1 >> c2 >> r2;
-				node cur = node(1e18, 0, 0);
+				node cur = node(1e9, 0, 0);
 				fo(i, r1, r2){
 					node o = get(1, 1, m, c1, c2, i);
 					cur = merge(cur, o);
@@ -136,7 +146,7 @@ namespace sub2{
 					auto calc = [&](int mid){
 						int col = c2 - c1 + 1;
 						int i = mid / col;
-						int res = pre[i] - red * mid;
+						ll res = pre[i] - red * mid;
 						int rem = mid % col;
 						if(rem) ++i;
 						int j = 0;
@@ -148,7 +158,7 @@ namespace sub2{
 							if(rem) res += get(1, 1, m, j, c2, r1 + i - 1).sum;
 						}
 						if(res > s){
-							int need = res - s + red;
+							ll need = res - s + red;
 							if(get(1, 1, m, j, j, r1 + i - 1).sum >= need) res = s;
 						}
 						return res;
@@ -164,7 +174,7 @@ namespace sub2{
 					// update
 					auto [x, y] = find_pos(l);
 					// cout << "*" << l << ' ' << x << ' ' << y, el;
-					int sum = pre[x - 1] - red * l;
+					ll sum = pre[x - 1] - red * l;
 					if(x & 1) sum += get(1, 1, m, c1, y, r1 + x - 1).sum;
 					else sum += get(1, 1, m, y, c2, r1 + x - 1).sum;
 					fo(i, r1, r1 + x - 2) upd(1, 1, m, c1, c2, red, i);
